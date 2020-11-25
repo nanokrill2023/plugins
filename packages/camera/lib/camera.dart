@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -142,7 +143,7 @@ class CameraPreview extends StatelessWidget {
   final CameraController controller;
 
   @override
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     // ISSUE: The Texture seems to return a buffer in portrait in Android (width and height are inverted) and a buffer in landscape on iOS (which respects the aspect ratio).
     // The ideal code (if the Texture was oriented properly in landscape for both Android and iOS) would be:
     /*
@@ -154,16 +155,16 @@ class CameraPreview extends StatelessWidget {
       ),
     )
     */
+
     return controller.value.isInitialized
         ? RotatedBox(
-            quarterTurns: Platform.isAndroid ? 0 : 1,
-            child: AspectRatio(
-              aspectRatio: Platform.isAndroid
-                  ? 1 / controller.value.aspectRatio
-                  : controller.value.aspectRatio,
-              child: Texture(textureId: controller._textureId),
-            ),
-          )
+      quarterTurns: Platform.isAndroid ? 0 : controller.description
+          .sensorOrientation == 90 ? 1 : -1,
+      child: AspectRatio(
+        aspectRatio: controller.value.aspectRatio,
+        child: Texture(textureId: controller._textureId),
+      ),
+    )
         : Container();
   }
 }
@@ -182,12 +183,12 @@ class CameraValue {
 
   const CameraValue.uninitialized()
       : this(
-          isInitialized: false,
-          isRecordingVideo: false,
-          isTakingPicture: false,
-          isStreamingImages: false,
-          isRecordingPaused: false,
-        );
+    isInitialized: false,
+    isRecordingVideo: false,
+    isTakingPicture: false,
+    isStreamingImages: false,
+    isRecordingPaused: false,
+  );
 
   /// True after [CameraController.initialize] has completed successfully.
   final bool isInitialized;
@@ -216,8 +217,7 @@ class CameraValue {
   /// Convenience getter for `previewSize.height / previewSize.width`.
   ///
   /// Can only be called when [initialize] is done.
-  double get aspectRatio => previewSize.height / previewSize.width;
-
+  double get aspectRatio => previewSize.width / previewSize.height;
   bool get hasError => errorDescription != null;
 
   CameraValue copyWith({
@@ -260,11 +260,10 @@ class CameraValue {
 ///
 /// To show the camera preview on the screen use a [CameraPreview] widget.
 class CameraController extends ValueNotifier<CameraValue> {
-  CameraController(
-    this.description,
-    this.resolutionPreset, {
-    this.enableAudio = true,
-  }) : super(const CameraValue.uninitialized());
+  CameraController(this.description,
+      this.resolutionPreset, {
+        this.enableAudio = true,
+      }) : super(const CameraValue.uninitialized());
 
   final CameraDescription description;
   final ResolutionPreset resolutionPreset;
@@ -288,7 +287,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     try {
       _creatingCompleter = Completer<void>();
       final Map<String, dynamic> reply =
-          await _channel.invokeMapMethod<String, dynamic>(
+      await _channel.invokeMapMethod<String, dynamic>(
         'initialize',
         <String, dynamic>{
           'cameraName': description.name,
@@ -424,13 +423,13 @@ class CameraController extends ValueNotifier<CameraValue> {
       throw CameraException(e.code, e.message);
     }
     const EventChannel cameraEventChannel =
-        EventChannel('plugins.flutter.io/camera/imageStream');
+    EventChannel('plugins.flutter.io/camera/imageStream');
     _imageStreamSubscription =
         cameraEventChannel.receiveBroadcastStream().listen(
-      (dynamic imageData) {
-        onAvailable(CameraImage._fromPlatformData(imageData));
-      },
-    );
+              (dynamic imageData) {
+            onAvailable(CameraImage._fromPlatformData(imageData));
+          },
+        );
   }
 
   /// Stop streaming images from platform camera.
