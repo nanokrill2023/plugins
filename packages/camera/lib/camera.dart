@@ -142,9 +142,28 @@ class CameraPreview extends StatelessWidget {
   final CameraController controller;
 
   @override
-  Widget build(BuildContext context) {
+   Widget build(BuildContext context) {
+    // ISSUE: The Texture seems to return a buffer in portrait in Android (width and height are inverted) and a buffer in landscape on iOS (which respects the aspect ratio).
+    // The ideal code (if the Texture was oriented properly in landscape for both Android and iOS) would be:
+    /*
+    RotatedBox(
+      quarterTurns: controller.description.sensorOrientation ~/ 90,
+      child: AspectRatio(
+        aspectRatio: controller.value.aspectRatio,
+        child: Texture(textureId: controller._textureId),
+      ),
+    )
+    */
     return controller.value.isInitialized
-        ? Texture(textureId: controller._textureId)
+        ? RotatedBox(
+            quarterTurns: Platform.isAndroid ? 0 : 1,
+            child: AspectRatio(
+              aspectRatio: Platform.isAndroid
+                  ? 1 / controller.value.aspectRatio
+                  : controller.value.aspectRatio,
+              child: Texture(textureId: controller._textureId),
+            ),
+          )
         : Container();
   }
 }
