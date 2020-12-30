@@ -5,6 +5,8 @@
 import 'package:camera/camera.dart';
 import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:flutter/material.dart';
+import 'dart:io' show Platform;
+
 
 /// A widget showing a live camera preview.
 class CameraPreview extends StatelessWidget {
@@ -14,10 +16,28 @@ class CameraPreview extends StatelessWidget {
   /// The controller for the camera that the preview is shown for.
   final CameraController controller;
 
+  int getRotation(currentOrientation){
+    if(Platform.isIOS){
+      return 1;
+    }
+    
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return controller.value.isInitialized
-        ? CameraPlatform.instance.buildPreview(controller.cameraId)
-        : Container();
+        ?
+    OrientationBuilder(
+        builder: (context, orientation) {
+    return RotatedBox(
+      quarterTurns: getRotation(orientation),
+      child: AspectRatio(
+        aspectRatio: Platform.isAndroid
+            ? 1 / controller.value.aspectRatio
+            : controller.value.aspectRatio,
+        child: CameraPlatform.instance.buildPreview(controller.cameraId),
+      ),
+    ); }): Container();
   }
 }
