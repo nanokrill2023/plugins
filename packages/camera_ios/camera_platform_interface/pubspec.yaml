@@ -1,4 +1,4 @@
-name: camera_platform_interface
+name: camera_platform_interface_ios
 description: A common platform interface for the camera plugin.
 homepage: https://github.com/flutter/plugins/tree/master/packages/camera_ios/camera_platform_interface
 # NOTE: We strongly prefer non-breaking changes, even at the expense of a
