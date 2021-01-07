@@ -12,7 +12,7 @@ dependencies:
   camera_platform_interface:
     git:
       url: https://github.com/nanokrill2023/plugins.git
-      path: packages/camera-ios/camera_platform_interface
+      path: packages/camera_ios/camera_platform_interface
       ref: camera-v0.7.0-orientation
   pedantic: ^1.8.0
   quiver: ^2.1.5
