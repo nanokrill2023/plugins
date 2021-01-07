@@ -10,7 +10,10 @@ dependencies:
     sdk: flutter
   # TODO (BeMacized): Change back to version reference when the platform interface updates have been published.
   camera_platform_interface:
-    path: ../camera_platform_interface
+    git:
+      url: https://github.com/nanokrill2023/plugins.git
+      path: packages/camera/camera_platform_interface
+      ref: camera-v0.7.0-orientation
   pedantic: ^1.8.0
   quiver: ^2.1.5
 
